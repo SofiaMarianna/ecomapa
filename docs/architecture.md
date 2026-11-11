@@ -296,6 +296,22 @@ O raio utilizado será fixo em 2.000 metros.
 
 O catálogo será inicialmente fixo, portanto não serão implementados endpoints de cadastro, edição e exclusão de materiais na primeira versão.
 
+O endpoint `GET /api/materials` não exige parâmetros obrigatórios. Em caso de sucesso, retorna HTTP 200 com os materiais em ordem alfabética:
+
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "name": "Metal",
+      "description": "Descrição do material"
+    }
+  ]
+}
+```
+
+Se não houver materiais cadastrados, retorna HTTP 200 com `{"data":[]}`.
+
 ### 6.3. Geocodificação
 
 | Método | Endpoint | Finalidade |
