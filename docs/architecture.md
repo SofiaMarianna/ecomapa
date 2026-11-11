@@ -256,22 +256,41 @@ Os caminhos abaixo representam o contrato inicial planejado para a API.
 | `PUT` | `/api/eco-points/:id` | Editar os dados de um ponto e seus materiais |
 | `DELETE` | `/api/eco-points/:id` | Excluir um ponto |
 
-A consulta de pontos por área visível utilizará os seguintes parâmetros:
+A consulta `GET /api/eco-points` exige os quatro parâmetros abaixo. Longitudes devem estar entre -180 e 180, e latitudes entre -90 e 90, inclusive. `west` deve ser menor que `east`, e `south` deve ser menor que `north`. Limites que atravessem o antimeridiano não são suportados.
 
 | Parâmetro | Significado |
 |---|---|
-| `west` | Longitude oeste |
-| `south` | Latitude sul |
-| `east` | Longitude leste |
-| `north` | Latitude norte |
+| `west` | Longitude oeste, entre -180 e 180 |
+| `south` | Latitude sul, entre -90 e 90 |
+| `east` | Longitude leste, entre -180 e 180 |
+| `north` | Latitude norte, entre -90 e 90 |
 
 Exemplo:
 
 ```http
-GET /api/eco-points?west=-38.58&south=-6.91&east=-38.54&north=-6.87
+GET /api/eco-points?west=-38.563&south=-6.895&east=-38.555&north=-6.883
 ```
 
-Os quatro parâmetros representam os limites geográficos da área visível do mapa.
+Cada parâmetro deve aparecer uma única vez e conter um valor numérico finito e não vazio. Parâmetros ausentes ou repetidos, valores vazios, não numéricos ou não finitos, coordenadas fora dos intervalos e limites inconsistentes resultam em HTTP 400. Os pontos fictícios também são incluídos e identificados pelo campo `is_demo`.
+
+Em caso de sucesso, o endpoint retorna HTTP 200:
+
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "name": "Ponto de demonstração — Centro",
+      "address": "Endereço do ponto",
+      "latitude": -6.8891,
+      "longitude": -38.5612,
+      "is_demo": true
+    }
+  ]
+}
+```
+
+Se nenhum ponto estiver dentro dos limites, retorna HTTP 200 com `{"data":[]}`. Falhas de acesso ao PostgreSQL retornam HTTP 503. Os erros seguem o formato centralizado `{ "error": { "message": "..." } }`.
 
 A busca por proximidade utilizará:
 
