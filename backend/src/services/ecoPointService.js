@@ -1,12 +1,31 @@
 import { HttpError } from '../middlewares/httpError.js';
 import {
+  findEcoPointById as findEcoPointByIdFromRepository,
   findEcoPointsNearby as findEcoPointsNearbyFromRepository,
   findEcoPointsWithinBounds,
 } from '../repositories/ecoPointRepository.js';
 import { validateGeoBounds } from '../validators/geoBoundsValidator.js';
 import { validateGeoCoordinates } from '../validators/geoCoordinatesValidator.js';
+import { validateEcoPointId } from '../validators/ecoPointIdValidator.js';
 
 const NEARBY_RADIUS_METERS = 2000;
+
+export async function getEcoPointById(id) {
+  const validatedId = validateEcoPointId(id);
+  let ecoPoint;
+
+  try {
+    ecoPoint = await findEcoPointByIdFromRepository(validatedId);
+  } catch (error) {
+    throw new HttpError(503, 'Service unavailable: database connection failed', { cause: error });
+  }
+
+  if (ecoPoint === null) {
+    throw new HttpError(404, 'Eco point not found');
+  }
+
+  return ecoPoint;
+}
 
 export async function getEcoPoints(query) {
   const bounds = validateGeoBounds(query);
