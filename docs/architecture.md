@@ -296,8 +296,8 @@ A busca por proximidade utilizará:
 
 | Parâmetro | Significado |
 |---|---|
-| `lat` | Latitude da localização de referência |
-| `lng` | Longitude da localização de referência |
+| `lat` | Latitude da localização de referência, entre -90 e 90 |
+| `lng` | Longitude da localização de referência, entre -180 e 180 |
 
 Exemplo:
 
@@ -305,7 +305,29 @@ Exemplo:
 GET /api/eco-points/nearby?lat=-6.8891&lng=-38.5612
 ```
 
-O raio utilizado será fixo em 2.000 metros.
+Os parâmetros `lat` e `lng` são obrigatórios e devem aparecer exatamente uma vez. Cada valor deve ser numérico, finito e não vazio; coordenadas fora dos intervalos indicados, parâmetros ausentes ou repetidos, valores vazios e valores não numéricos resultam em HTTP 400.
+
+O raio é fixo em 2.000 metros e não pode ser definido pela requisição. O backend constrói a coordenada de referência como um ponto PostGIS, utilizando longitude e depois latitude, e consulta a coluna `location` do tipo `GEOGRAPHY(Point, 4326)`. `ST_DWithin` seleciona pontos dentro do raio em metros e `ST_Distance` calcula a distância de cada resultado. Os resultados são ordenados pela distância crescente e, em caso de empate, pelo nome e identificador.
+
+Em caso de sucesso, o endpoint retorna HTTP 200:
+
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "name": "Ponto de demonstração — Centro",
+      "address": "Endereço do ponto",
+      "latitude": -6.8891,
+      "longitude": -38.5612,
+      "is_demo": true,
+      "distance_meters": 125.4
+    }
+  ]
+}
+```
+
+`distance_meters` contém a distância calculada em metros. Se nenhum ponto estiver a até 2.000 metros, o endpoint retorna HTTP 200 com `{"data":[]}`. Falhas de acesso ao PostgreSQL retornam HTTP 503. Os erros seguem o formato centralizado `{ "error": { "message": "..." } }`.
 
 ### 6.2. Materiais
 
