@@ -329,6 +329,43 @@ Em caso de sucesso, o endpoint retorna HTTP 200:
 
 `distance_meters` contém a distância calculada em metros. Se nenhum ponto estiver a até 2.000 metros, o endpoint retorna HTTP 200 com `{"data":[]}`. Falhas de acesso ao PostgreSQL retornam HTTP 503. Os erros seguem o formato centralizado `{ "error": { "message": "..." } }`.
 
+#### Consulta individual
+
+O endpoint `GET /api/eco-points/:id` consulta um ponto pelo identificador UUID e retorna seus dados, coordenadas geográficas e todos os materiais associados. O parâmetro `id` deve estar no formato UUID canônico; letras maiúsculas e minúsculas são aceitas, sem restrição de versão.
+
+Exemplo:
+
+```http
+GET /api/eco-points/550e8400-e29b-41d4-a716-446655440000
+```
+
+Em caso de sucesso, retorna HTTP 200 com os campos `id`, `name`, `address`, `description`, `latitude`, `longitude`, `is_demo`, `created_at`, `updated_at` e `materials`. `materials` é sempre um array de objetos contendo `id`, `name` e `description`; quando o ponto não possui materiais associados, o array é vazio.
+
+```json
+{
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "name": "Ponto de demonstração — Centro",
+    "address": "Endereço do ponto",
+    "description": "Descrição do ponto",
+    "latitude": -6.8891,
+    "longitude": -38.5612,
+    "is_demo": true,
+    "created_at": "2025-01-15T12:00:00.000Z",
+    "updated_at": "2025-01-15T12:00:00.000Z",
+    "materials": [
+      {
+        "id": "7a2c2d5a-8d35-4ce0-8815-f6fa3981309a",
+        "name": "Metal",
+        "description": "Embalagens e objetos metálicos"
+      }
+    ]
+  }
+}
+```
+
+UUID inválido retorna HTTP 400. Se o identificador for válido, mas não corresponder a um ponto cadastrado, retorna HTTP 404. Falhas de acesso ao PostgreSQL retornam HTTP 503. Os erros seguem o formato centralizado `{ "error": { "message": "..." } }`.
+
 ### 6.2. Materiais
 
 | Método | Endpoint | Finalidade |
