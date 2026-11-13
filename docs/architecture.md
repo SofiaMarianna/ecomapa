@@ -241,9 +241,9 @@ O endereço retornado representa uma referência obtida a partir dos dados carto
 
 ---
 
-## 6. Endpoints previstos
+## 6. Endpoints implementados e previstos
 
-Os caminhos abaixo representam o contrato inicial planejado para a API.
+Os caminhos abaixo incluem endpoints implementados e contratos planejados para a API.
 
 ### 6.1. Pontos de coleta
 
@@ -328,6 +328,76 @@ Em caso de sucesso, o endpoint retorna HTTP 200:
 ```
 
 `distance_meters` contém a distância calculada em metros. Se nenhum ponto estiver a até 2.000 metros, o endpoint retorna HTTP 200 com `{"data":[]}`. Falhas de acesso ao PostgreSQL retornam HTTP 503. Os erros seguem o formato centralizado `{ "error": { "message": "..." } }`.
+
+#### Cadastro de ponto de coleta
+
+O endpoint `POST /api/eco-points` cadastra um ponto e associa os materiais informados. O corpo deve ser um objeto JSON e aceitar somente as propriedades abaixo:
+
+| Campo | Obrigatório? | Tipo e regras |
+|---|---|---|
+| `name` | Sim | Texto não vazio após `trim`, com no máximo 120 caracteres |
+| `address` | Sim | Texto não vazio após `trim` |
+| `description` | Não | Texto ou `null`; ausente, vazio ou composto apenas por espaços é persistido como `null` |
+| `latitude` | Sim | Número JSON finito entre -90 e 90 |
+| `longitude` | Sim | Número JSON finito entre -180 e 180 |
+| `material_ids` | Sim | Array não vazio de UUIDs canônicos, sem duplicatas |
+
+Coordenadas devem ser números JSON, não strings. UUIDs aceitam letras maiúsculas ou minúsculas; comparações de duplicidade não diferenciam capitalização. Cada material informado deve existir. Campos adicionais, incluindo `id`, `is_demo`, `created_at` e `updated_at`, são rejeitados. O nome e o endereço são normalizados com `trim` antes de serem persistidos.
+
+Exemplo de requisição:
+
+```http
+POST /api/eco-points
+Content-Type: application/json
+```
+
+```json
+{
+  "name": "Ponto de Coleta Central",
+  "address": "Rua Exemplo, 120, Centro, Cajazeiras - PB",
+  "description": "Localizado próximo à praça central.",
+  "latitude": -6.8891,
+  "longitude": -38.5612,
+  "material_ids": [
+    "7a2c2d5a-8d35-4ce0-8815-f6fa3981309a",
+    "8b3d2e6b-9e46-4df1-9926-a7fa3981309b"
+  ]
+}
+```
+
+Em caso de sucesso, retorna HTTP 201 e o ponto criado no mesmo formato de `GET /api/eco-points/:id`, dentro de `{ "data": ... }`. O identificador, `is_demo` e as datas são definidos pelo banco. Os materiais são ordenados pelo nome e, em caso de empate, pelo identificador:
+
+```json
+{
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "name": "Ponto de Coleta Central",
+    "address": "Rua Exemplo, 120, Centro, Cajazeiras - PB",
+    "description": "Localizado próximo à praça central.",
+    "latitude": -6.8891,
+    "longitude": -38.5612,
+    "is_demo": false,
+    "created_at": "2025-01-15T12:00:00.000Z",
+    "updated_at": "2025-01-15T12:00:00.000Z",
+    "materials": [
+      {
+        "id": "7a2c2d5a-8d35-4ce0-8815-f6fa3981309a",
+        "name": "Metal",
+        "description": "Embalagens e objetos metálicos"
+      },
+      {
+        "id": "8b3d2e6b-9e46-4df1-9926-a7fa3981309b",
+        "name": "Papel e papelão",
+        "description": "Papéis e embalagens de papel"
+      }
+    ]
+  }
+}
+```
+
+Corpo inválido, campo obrigatório ausente ou inválido, propriedade extra, UUID inválido ou duplicado, coordenada fora do intervalo e material inexistente resultam em HTTP 400. Falhas de acesso ou execução no PostgreSQL retornam HTTP 503. Os erros usam o formato centralizado `{ "error": { "message": "..." } }`.
+
+O backend executa a verificação de materiais, a inserção do ponto, a criação das associações e a consulta do resultado dentro de uma única transação. As coordenadas são convertidas para `GEOGRAPHY(Point, 4326)` na ordem longitude e latitude. Se um material não existir, a transação é revertida e a requisição retorna HTTP 400; qualquer outra falha durante as operações também provoca rollback, impedindo persistência parcial do ponto e de seus materiais.
 
 #### Consulta individual
 
