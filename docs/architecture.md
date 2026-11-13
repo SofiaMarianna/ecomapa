@@ -436,6 +436,69 @@ Em caso de sucesso, retorna HTTP 200 com os campos `id`, `name`, `address`, `des
 
 UUID inválido retorna HTTP 400. Se o identificador for válido, mas não corresponder a um ponto cadastrado, retorna HTTP 404. Falhas de acesso ao PostgreSQL retornam HTTP 503. Os erros seguem o formato centralizado `{ "error": { "message": "..." } }`.
 
+#### Edição de ponto de coleta
+
+O endpoint `PUT /api/eco-points/:id` substitui todos os campos editáveis de um ponto e seus materiais associados. O parâmetro `id` da URL deve ser um UUID canônico; letras maiúsculas e minúsculas são aceitas. O corpo deve conter os mesmos campos e seguir as mesmas regras de validação do cadastro por `POST`: `name`, `address`, `description`, `latitude`, `longitude` e `material_ids`. Propriedades adicionais são rejeitadas.
+
+Como o método PUT representa substituição completa, `name`, `address`, `latitude`, `longitude` e `material_ids` são obrigatórios. `description` pode ser omitida, enviada como `null` ou como texto; quando ausente, vazio ou composto apenas por espaços, seu valor é normalizado para `null`. O nome e o endereço são normalizados com `trim`. As coordenadas devem ser números JSON finitos, com latitude entre -90 e 90 e longitude entre -180 e 180. `material_ids` deve ser um array não vazio de UUIDs válidos e sem duplicatas, e todos os materiais informados devem existir.
+
+O identificador do ponto é enviado na URL. O corpo contém somente os campos editáveis:
+
+```http
+PUT /api/eco-points/550e8400-e29b-41d4-a716-446655440000
+Content-Type: application/json
+```
+
+```json
+{
+  "name": "Ponto de Coleta Central Atualizado",
+  "address": "Rua Exemplo, 150, Centro, Cajazeiras - PB",
+  "description": "Nova localização e informações.",
+  "latitude": -6.89,
+  "longitude": -38.56,
+  "material_ids": [
+    "7a2c2d5a-8d35-4ce0-8815-f6fa3981309a",
+    "8b3d2e6b-9e46-4df1-9926-a7fa3981309b"
+  ]
+}
+```
+
+Os materiais associados existentes são removidos e substituídos pelos materiais enviados, dentro da mesma transação que atualiza nome, endereço, descrição e localização. A localização permanece como `GEOGRAPHY(Point, 4326)`, construída com longitude seguida de latitude. O campo `is_demo` e `created_at` permanecem inalterados; `updated_at` continua sendo atualizado pelo trigger do PostgreSQL. Os campos internos não podem ser enviados no corpo.
+
+Em caso de sucesso, retorna HTTP 200 no mesmo formato de `GET /api/eco-points/:id`, dentro de `{ "data": ... }`. Os materiais são ordenados pelo nome e, em caso de empate, pelo identificador:
+
+```json
+{
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "name": "Ponto de Coleta Central Atualizado",
+    "address": "Rua Exemplo, 150, Centro, Cajazeiras - PB",
+    "description": "Nova localização e informações.",
+    "latitude": -6.89,
+    "longitude": -38.56,
+    "is_demo": false,
+    "created_at": "2025-01-15T12:00:00.000Z",
+    "updated_at": "2025-02-15T12:00:00.000Z",
+    "materials": [
+      {
+        "id": "7a2c2d5a-8d35-4ce0-8815-f6fa3981309a",
+        "name": "Metal",
+        "description": "Embalagens e objetos metálicos"
+      },
+      {
+        "id": "8b3d2e6b-9e46-4df1-9926-a7fa3981309b",
+        "name": "Papel e papelão",
+        "description": "Papéis e embalagens de papel"
+      }
+    ]
+  }
+}
+```
+
+UUID ou corpo inválido, propriedade adicional, coordenada inválida, material inexistente ou material duplicado resultam em HTTP 400. Se o UUID for válido, mas não corresponder a um ponto, retorna HTTP 404. Falhas de acesso ou execução no PostgreSQL retornam HTTP 503. Os erros usam o formato centralizado `{ "error": { "message": "..." } }`.
+
+O backend bloqueia a linha do ponto com `SELECT ... FOR UPDATE`, verifica os materiais, atualiza os dados, substitui os relacionamentos e consulta a resposta usando a mesma conexão e transação PostgreSQL. A transação só é confirmada após todas as etapas; falhas provocam rollback para impedir que o ponto ou seus materiais fiquem parcialmente atualizados.
+
 ### 6.2. Materiais
 
 | Método | Endpoint | Finalidade |

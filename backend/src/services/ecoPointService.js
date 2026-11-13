@@ -4,6 +4,7 @@ import {
   findEcoPointById as findEcoPointByIdFromRepository,
   findEcoPointsNearby as findEcoPointsNearbyFromRepository,
   findEcoPointsWithinBounds,
+  updateEcoPoint as updateEcoPointFromRepository,
 } from '../repositories/ecoPointRepository.js';
 import { validateEcoPointCreate } from '../validators/ecoPointCreateValidator.js';
 import { validateGeoBounds } from '../validators/geoBoundsValidator.js';
@@ -20,6 +21,31 @@ export async function createEcoPoint(body) {
     result = await createEcoPointFromRepository(ecoPointData);
   } catch (error) {
     throw new HttpError(503, 'Service unavailable: database connection failed', { cause: error });
+  }
+
+  if (result.missingMaterialIds.length > 0) {
+    throw new HttpError(400, 'One or more materials do not exist');
+  }
+
+  return result.ecoPoint;
+}
+
+export async function updateEcoPoint(id, body) {
+  const validatedId = validateEcoPointId(id);
+  const ecoPointData = validateEcoPointCreate(body);
+  let result;
+
+  try {
+    result = await updateEcoPointFromRepository({
+      id: validatedId,
+      ...ecoPointData,
+    });
+  } catch (error) {
+    throw new HttpError(503, 'Service unavailable: database connection failed', { cause: error });
+  }
+
+  if (result.notFound) {
+    throw new HttpError(404, 'Eco point not found');
   }
 
   if (result.missingMaterialIds.length > 0) {
