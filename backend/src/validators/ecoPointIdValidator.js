@@ -1,9 +1,8 @@
 import { HttpError } from '../middlewares/httpError.js';
-
-const uuidPattern = /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i;
+import { isCanonicalUuid } from './uuidValidator.js';
 
 export function validateEcoPointId(id) {
-  if (typeof id !== 'string' || !uuidPattern.test(id)) {
+  if (!isCanonicalUuid(id)) {
     throw new HttpError(400, 'Eco point id must be a valid UUID');
   }
 
