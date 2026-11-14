@@ -1,6 +1,7 @@
 import { HttpError } from '../middlewares/httpError.js';
 import {
   createEcoPoint as createEcoPointFromRepository,
+  deleteEcoPoint as deleteEcoPointFromRepository,
   findEcoPointById as findEcoPointByIdFromRepository,
   findEcoPointsNearby as findEcoPointsNearbyFromRepository,
   findEcoPointsWithinBounds,
@@ -53,6 +54,21 @@ export async function updateEcoPoint(id, body) {
   }
 
   return result.ecoPoint;
+}
+
+export async function deleteEcoPoint(id) {
+  const validatedId = validateEcoPointId(id);
+  let deleted;
+
+  try {
+    deleted = await deleteEcoPointFromRepository(validatedId);
+  } catch (error) {
+    throw new HttpError(503, 'Service unavailable: database connection failed', { cause: error });
+  }
+
+  if (!deleted) {
+    throw new HttpError(404, 'Eco point not found');
+  }
 }
 
 export async function getEcoPointById(id) {

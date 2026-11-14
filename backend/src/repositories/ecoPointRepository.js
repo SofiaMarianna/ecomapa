@@ -40,6 +40,17 @@ export async function findEcoPointById(id) {
   return queryEcoPointDetails(pool, id);
 }
 
+export async function deleteEcoPoint(id) {
+  const result = await pool.query(
+    `DELETE FROM public.eco_point
+     WHERE id = $1::uuid
+     RETURNING id;`,
+    [id],
+  );
+
+  return result.rows.length > 0;
+}
+
 export async function findEcoPointsWithinBounds({ west, south, east, north }) {
   const result = await pool.query(
     `SELECT

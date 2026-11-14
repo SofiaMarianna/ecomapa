@@ -1,5 +1,6 @@
 import {
   createEcoPoint as createEcoPointFromService,
+  deleteEcoPoint as deleteEcoPointFromService,
   getEcoPointById as getEcoPointByIdFromService,
   getEcoPoints as getEcoPointsFromService,
   getNearbyEcoPoints as getNearbyEcoPointsFromService,
@@ -14,6 +15,11 @@ export async function createEcoPoint(request, response) {
 export async function updateEcoPoint(request, response) {
   const ecoPoint = await updateEcoPointFromService(request.params.id, request.body);
   response.status(200).json({ data: ecoPoint });
+}
+
+export async function deleteEcoPoint(request, response) {
+  await deleteEcoPointFromService(request.params.id);
+  response.status(204).end();
 }
 
 export async function getEcoPointById(request, response) {
