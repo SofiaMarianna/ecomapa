@@ -499,6 +499,20 @@ UUID ou corpo inválido, propriedade adicional, coordenada inválida, material i
 
 O backend bloqueia a linha do ponto com `SELECT ... FOR UPDATE`, verifica os materiais, atualiza os dados, substitui os relacionamentos e consulta a resposta usando a mesma conexão e transação PostgreSQL. A transação só é confirmada após todas as etapas; falhas provocam rollback para impedir que o ponto ou seus materiais fiquem parcialmente atualizados.
 
+#### Exclusão de ponto de coleta
+
+O endpoint `DELETE /api/eco-points/:id` exclui um ponto pelo identificador UUID informado no parâmetro `id`. A operação não exige corpo de requisição.
+
+Exemplo:
+
+```http
+DELETE /api/eco-points/550e8400-e29b-41d4-a716-446655440000
+```
+
+Em caso de sucesso, retorna HTTP 204 sem corpo. Um UUID inválido resulta em HTTP 400; se o ponto não existir, retorna HTTP 404. Falhas de acesso ou execução no PostgreSQL retornam HTTP 503, usando o formato centralizado `{ "error": { "message": "..." } }`.
+
+A exclusão usa a restrição `ON DELETE CASCADE` da chave estrangeira em `public.eco_point_material` para remover automaticamente os relacionamentos do ponto. Os registros de `public.material` não são excluídos.
+
 ### 6.2. Materiais
 
 | Método | Endpoint | Finalidade |
