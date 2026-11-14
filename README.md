@@ -43,6 +43,7 @@ ecomapa/
 
 ## Documentação
 
+- [Frontend — instalação, configuração e execução](frontend/README.md)
 - [Arquitetura](docs/architecture.md)
 - [Modelo de dados](docs/data-model.md)
 
