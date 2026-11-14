@@ -243,7 +243,7 @@ O endereço retornado representa uma referência obtida a partir dos dados carto
 
 ## 6. Endpoints implementados e previstos
 
-Os caminhos abaixo incluem endpoints implementados e contratos planejados para a API.
+Os caminhos abaixo incluem endpoints implementados e contratos planejados para a API. Os endpoints de geocodificação descritos nesta seção estão implementados.
 
 ### 6.1. Pontos de coleta
 
@@ -550,15 +550,38 @@ Pesquisa de endereço:
 GET /api/geocode/search?q=Rua+Exemplo+Cajazeiras+PB
 ```
 
+O parâmetro `q` é obrigatório, deve aparecer uma única vez, é normalizado com `trim` e aceita de 1 a 200 caracteres. A pesquisa é restrita ao Brasil e retorna no máximo cinco resultados:
+
+```json
+{
+  "data": [
+    {
+      "lat": -6.8891,
+      "lon": -38.5612,
+      "display_name": "Rua Exemplo, Cajazeiras, Paraíba, Brasil",
+      "osm_type": "way",
+      "osm_id": "123456",
+      "category": "highway",
+      "type": "residential",
+      "address": {}
+    }
+  ]
+}
+```
+
+Uma pesquisa sem resultados retorna HTTP 200 com `{"data":[]}`.
+
 Geocodificação reversa:
 
 ```http
 GET /api/geocode/reverse?lat=-6.8891&lon=-38.5612
 ```
 
-Os endpoints específicos, como `/nearby`, devem ser registrados no Express antes da rota dinâmica `/:id`, evitando que sejam interpretados como identificadores de pontos.
+`lat` e `lon` são obrigatórios e devem aparecer uma única vez. Ambos devem ser números finitos; a latitude deve estar entre -90 e 90 e a longitude entre -180 e 180, inclusive. A resposta contém um único objeto com os mesmos campos da pesquisa, dentro de `data`. Se não houver endereço correspondente, o endpoint retorna HTTP 404.
 
-O formato definitivo das respostas, códigos de status HTTP e mensagens de erro será estabelecido durante a implementação.
+Entradas inválidas retornam HTTP 400. Falhas de comunicação com o provedor retornam HTTP 502, indisponibilidade ou limitação do provedor retornam HTTP 503 e timeout retorna HTTP 504. As respostas de erro não expõem mensagens técnicas do Nominatim.
+
+As rotas são atendidas pelo backend, que valida as entradas e encaminha a consulta ao provedor configurado em `NOMINATIM_BASE_URL`. O `User-Agent` é configurado por `NOMINATIM_USER_AGENT` e identifica o EcoMapa com uma referência ao repositório.
 
 ---
 
@@ -566,18 +589,21 @@ O formato definitivo das respostas, códigos de status HTTP e mensagens de erro 
 
 ### 7.1. Nominatim
 
-O Nominatim será utilizado para pesquisa de endereços e geocodificação reversa.
+O Nominatim é utilizado para pesquisa de endereços e geocodificação reversa. As chamadas são realizadas pelo backend e usam `format=jsonv2` e `addressdetails=1`.
 
-As requisições serão intermediadas pelo backend, evitando chamadas desnecessárias e permitindo centralizar o controle de utilização.
+As requisições externas possuem timeout de cinco segundos. Quando esse limite é excedido, a API retorna HTTP 504.
+
+O backend aplica um limitador compartilhado entre pesquisa e geocodificação reversa, permitindo no máximo uma requisição externa por segundo. Consultas repetidas são servidas por cache LRU em memória, limitado a 500 entradas e com expiração após 24 horas. Resultados negativos também são armazenados. O cache e o limitador atendem à primeira versão com uma única instância do backend; uma implantação com múltiplas instâncias exigirá coordenação compartilhada ou outro serviço de geocodificação.
+
+A pesquisa acontece somente mediante ação explícita da pessoa usuária. Não há autocomplete nem consultas a cada tecla digitada.
 
 O serviço público do Nominatim possui restrições que deverão ser respeitadas:
 
-- Limite absoluto de uma requisição por segundo por aplicação.
-- Identificação adequada da aplicação por `User-Agent` ou `Referer`.
+- Limite absoluto de uma requisição por segundo por aplicação, compartilhado entre os dois endpoints.
+- Identificação adequada da aplicação por `User-Agent` próprio do EcoMapa, contendo uma referência ao repositório.
 - Exibição da atribuição correspondente.
-- Utilização preferencialmente acionada por ações da pessoa usuária.
-- Implementação de cache para evitar consultas repetidas.
-- Não utilizar o serviço público para implementar autocomplete.
+- Consultas acionadas por ações explícitas da pessoa usuária; não implementar autocomplete.
+- Cache para evitar consultas repetidas e evitar novas requisições externas.
 - Não realizar consultas sistemáticas ou geocodificação em massa.
 
 O serviço público poderá ser substituído por outro provedor caso seja necessário.

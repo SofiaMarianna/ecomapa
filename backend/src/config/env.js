@@ -47,6 +47,32 @@ try {
   throw new Error('CORS_ORIGIN must be a valid HTTP or HTTPS origin without a path');
 }
 
+function parseNominatimBaseUrl(value) {
+  try {
+    const parsedUrl = new URL(value);
+    if (!['http:', 'https:'].includes(parsedUrl.protocol) || parsedUrl.search || parsedUrl.hash) {
+      throw new Error();
+    }
+    return parsedUrl.href.replace(/\/+$/, '');
+  } catch {
+    throw new Error('NOMINATIM_BASE_URL must be a valid HTTP or HTTPS URL without a query or fragment');
+  }
+}
+
+function parseNominatimUserAgent(value) {
+  const userAgent = value.trim();
+
+  if (
+    userAgent === ''
+    || /[\r\n]/.test(userAgent)
+    || !/^EcoMapa(?:\/|\s)/i.test(userAgent)
+  ) {
+    throw new Error('NOMINATIM_USER_AGENT must identify EcoMapa and must not contain line breaks');
+  }
+
+  return userAgent;
+}
+
 export const env = Object.freeze({
   NODE_ENV: nodeEnv,
   PORT: parseInteger('PORT', process.env.PORT ?? '3000', { min: 1, max: 65535 }),
@@ -57,4 +83,10 @@ export const env = Object.freeze({
   DB_PASSWORD: process.env.DB_PASSWORD,
   DB_SSL: parseBoolean('DB_SSL', process.env.DB_SSL ?? 'false'),
   CORS_ORIGIN: corsOrigin,
+  NOMINATIM_BASE_URL: parseNominatimBaseUrl(
+  process.env.NOMINATIM_BASE_URL ?? 'https://nominatim.openstreetmap.org',
+),
+NOMINATIM_USER_AGENT: parseNominatimUserAgent(
+  process.env.NOMINATIM_USER_AGENT ?? 'EcoMapa/1.0',
+),
 });
