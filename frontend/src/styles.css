@@ -389,8 +389,42 @@ a:focus-visible {
   line-height: 1.35;
 }
 
-.details-edit-button {
+.details-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
   margin-top: 12px;
+}
+
+.destructive-button {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 15px;
+  border: 1px solid #a93d34;
+  border-radius: 9px;
+  background: #a93d34;
+  color: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.25;
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.destructive-button:hover:not(:disabled) {
+  border-color: #882e27;
+  background: #882e27;
+  box-shadow: 0 3px 10px rgb(124 39 33 / 18%);
+}
+
+.destructive-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
 }
 
 .details-address {
@@ -476,6 +510,54 @@ a:focus-visible {
   border-radius: 16px;
   background: #fff;
   box-shadow: 0 20px 70px rgb(14 40 27 / 30%);
+}
+
+.delete-modal {
+  width: min(100%, 520px);
+}
+
+.delete-modal-content {
+  display: grid;
+  gap: 13px;
+  color: #405b4d;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.delete-modal-content > p {
+  margin: 0;
+}
+
+.delete-modal-content strong {
+  color: #1b3c30;
+}
+
+.delete-demo-warning {
+  padding: 9px 11px;
+  border-left: 3px solid #d88a32;
+  border-radius: 6px;
+  background: #fff7e6;
+  color: #76500f;
+  font-size: 13px;
+}
+
+.delete-dialog-error {
+  padding: 10px 12px;
+  border: 1px solid #efc8c3;
+  border-radius: 8px;
+  background: #fff2f0;
+  color: #963c34;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.delete-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 23px;
+  padding-top: 16px;
+  border-top: 1px solid #e6ece7;
 }
 
 .create-modal-heading {
@@ -915,6 +997,17 @@ a:focus-visible {
     max-height: calc(100vh - 16px);
     padding: 18px 14px;
     border-radius: 12px;
+  }
+
+  .delete-dialog-actions {
+    flex-direction: column-reverse;
+    margin-top: 18px;
+    padding-top: 12px;
+  }
+
+  .delete-dialog-actions .secondary-button,
+  .delete-dialog-actions .destructive-button {
+    width: 100%;
   }
 
   .create-modal-heading {

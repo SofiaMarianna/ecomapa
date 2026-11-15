@@ -9,12 +9,14 @@ export default function EcoPointDetails({
   error,
   onRetry,
   onEdit,
+  onDelete,
 }) {
   return (
     <section
       className="details-panel"
       aria-labelledby="details-heading"
       aria-live="polite"
+      tabIndex="-1"
     >
       <p className="eyebrow">Informações do local</p>
       <h2 id="details-heading">Detalhes do ponto</h2>
@@ -50,14 +52,27 @@ export default function EcoPointDetails({
             <h3>{point.name}</h3>
             {point.is_demo && <DemoBadge />}
           </div>
-          {Array.isArray(point.materials) && onEdit && (
-            <button
-              className="secondary-button details-edit-button"
-              type="button"
-              onClick={() => onEdit(point)}
-            >
-              Editar ponto
-            </button>
+          {Array.isArray(point.materials) && (onEdit || onDelete) && (
+            <div className="details-action-buttons">
+              {onEdit && (
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={() => onEdit(point)}
+                >
+                  Editar ponto
+                </button>
+              )}
+              {onDelete && (
+                <button
+                  className="destructive-button"
+                  type="button"
+                  onClick={() => onDelete(point)}
+                >
+                  Excluir ponto
+                </button>
+              )}
+            </div>
           )}
           {point.address && (
             <p className="details-address">{point.address}</p>
