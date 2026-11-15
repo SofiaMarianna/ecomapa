@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { getEcoPointById } from '../services/api.js';
 
-export default function useEcoPointDetails(id) {
+export default function useEcoPointDetails(id, initialDetails = null) {
   const [details, setDetails] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -13,6 +13,17 @@ export default function useEcoPointDetails(id) {
 
     if (!id) {
       setDetails(null);
+      setError(null);
+      setIsLoading(false);
+      return undefined;
+    }
+
+    if (
+      retryCount === 0 &&
+      initialDetails?.id === id &&
+      Array.isArray(initialDetails.materials)
+    ) {
+      setDetails(initialDetails);
       setError(null);
       setIsLoading(false);
       return undefined;
@@ -49,7 +60,7 @@ export default function useEcoPointDetails(id) {
     return () => {
       controller.abort();
     };
-  }, [id, retryCount]);
+  }, [id, initialDetails, retryCount]);
 
   return {
     details,
