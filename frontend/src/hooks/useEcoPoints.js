@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { getEcoPointsByBounds } from '../services/api.js';
 
-export default function useEcoPoints(bounds) {
+export default function useEcoPoints(bounds, enabled = true) {
   const [points, setPoints] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -12,7 +12,8 @@ export default function useEcoPoints(bounds) {
     : null;
 
   useEffect(() => {
-    if (!bounds || !boundsKey) {
+    if (!enabled || !bounds || !boundsKey) {
+      setIsLoading(false);
       return undefined;
     }
 
@@ -60,8 +61,11 @@ export default function useEcoPoints(bounds) {
 
     return () => {
       controller.abort();
+      if (currentRequestId === requestId.current) {
+        requestId.current += 1;
+      }
     };
-  }, [boundsKey, retryCount]);
+  }, [boundsKey, enabled, retryCount]);
 
   return {
     points,

@@ -7,11 +7,13 @@ import PointsSidebar from './components/PointsSidebar.jsx';
 import useBrowserLocation from './hooks/useBrowserLocation.js';
 import useEcoPointDetails from './hooks/useEcoPointDetails.js';
 import useEcoPoints from './hooks/useEcoPoints.js';
+import useNearbyEcoPoints from './hooks/useNearbyEcoPoints.js';
 import EcoMap from './map/EcoMap.jsx';
 import { deleteEcoPoint } from './services/api.js';
 
 export default function App() {
   const [bounds, setBounds] = useState(null);
+  const [pointsMode, setPointsMode] = useState('visible');
   const [selectedPoint, setSelectedPoint] = useState(null);
   const [formMode, setFormMode] = useState(null);
   const [focusPoint, setFocusPoint] = useState(null);
@@ -25,9 +27,33 @@ export default function App() {
   const hasUserInteractedRef = useRef(false);
   const { location, status: locationStatus, errorMessage: locationErrorMessage } =
     useBrowserLocation();
-  const { points, isLoading, error, retry } = useEcoPoints(bounds);
-  const retryPointsRef = useRef(retry);
-  retryPointsRef.current = retry;
+  const {
+    points: visiblePoints,
+    isLoading: isVisiblePointsLoading,
+    error: visiblePointsError,
+    retry: retryVisiblePoints,
+  } = useEcoPoints(bounds, pointsMode === 'visible');
+  const {
+    points: nearbyPoints,
+    isLoading: isNearbyPointsLoading,
+    error: nearbyPointsError,
+    retry: retryNearbyPoints,
+  } = useNearbyEcoPoints(
+    location,
+    pointsMode === 'nearby' && locationStatus === 'success',
+  );
+  const points = pointsMode === 'nearby' ? nearbyPoints : visiblePoints;
+  const isLoading = pointsMode === 'nearby'
+    ? isNearbyPointsLoading
+    : isVisiblePointsLoading;
+  const error = pointsMode === 'nearby' ? nearbyPointsError : visiblePointsError;
+  const retry = pointsMode === 'nearby' ? retryNearbyPoints : retryVisiblePoints;
+  const retryVisiblePointsRef = useRef(retryVisiblePoints);
+  const retryNearbyPointsRef = useRef(retryNearbyPoints);
+  const retryActivePointsRef = useRef(retry);
+  retryVisiblePointsRef.current = retryVisiblePoints;
+  retryNearbyPointsRef.current = retryNearbyPoints;
+  retryActivePointsRef.current = retry;
   const {
     details,
     isLoading: isDetailsLoading,
@@ -44,8 +70,16 @@ export default function App() {
     if (pendingFocusRefreshRef.current) {
       pendingFocusRefreshRef.current = false;
       if (previousKey === nextKey) {
-        retryPointsRef.current();
+        retryVisiblePointsRef.current();
       }
+    }
+  }, []);
+
+  const handlePointsModeChange = useCallback((nextMode) => {
+    setPointsMode(nextMode);
+    if (nextMode === 'nearby') {
+      pendingFocusRefreshRef.current = false;
+      setFocusPoint(null);
     }
   }, []);
 
@@ -106,7 +140,7 @@ export default function App() {
         current?.id === deletedPointId ? null : current
       ));
       pendingFocusRefreshRef.current = false;
-      retryPointsRef.current();
+      retryActivePointsRef.current();
       setSuccessMessage('Ponto excluído com sucesso.');
     } catch (requestError) {
       setDeleteError(requestError.message);
@@ -118,16 +152,22 @@ export default function App() {
 
   const handlePointSaved = useCallback((savedPoint, mode) => {
     hasUserInteractedRef.current = true;
-    pendingFocusRefreshRef.current = true;
     setSelectedPoint(savedPoint);
-    setFocusPoint(savedPoint);
+    if (pointsMode === 'nearby') {
+      pendingFocusRefreshRef.current = false;
+      setFocusPoint(null);
+      retryNearbyPointsRef.current();
+    } else {
+      pendingFocusRefreshRef.current = true;
+      setFocusPoint(savedPoint);
+    }
     setFormMode(null);
     setSuccessMessage(
       mode === 'edit'
         ? 'Ponto atualizado com sucesso.'
         : 'Ponto cadastrado com sucesso.',
     );
-  }, []);
+  }, [pointsMode]);
 
   useEffect(() => {
     if (!successMessage) {
@@ -146,6 +186,10 @@ export default function App() {
       )}
       <div className="workspace">
         <PointsSidebar
+          mode={pointsMode}
+          onModeChange={handlePointsModeChange}
+          locationStatus={locationStatus}
+          locationErrorMessage={locationErrorMessage}
           points={points}
           selectedPointId={selectedPoint?.id}
           isLoading={isLoading}
@@ -166,6 +210,8 @@ export default function App() {
               locationErrorMessage={locationErrorMessage}
               hasUserInteractedRef={hasUserInteractedRef}
               onUserInteraction={handleMapInteraction}
+              isProximityMode={pointsMode === 'nearby'}
+              isPointsLoading={isLoading}
             />
           </section>
           <EcoPointDetails

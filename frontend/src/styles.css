@@ -195,6 +195,73 @@ a:focus-visible {
   letter-spacing: -0.025em;
 }
 
+.points-mode-control {
+  display: grid;
+  gap: 7px;
+  margin: 0 0 17px;
+  padding: 0;
+  border: 0;
+}
+
+.points-mode-legend {
+  margin-bottom: 2px;
+  color: #345848;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.points-mode-option {
+  display: flex;
+  min-height: 42px;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 9px 10px;
+  border: 1px solid #dce5dc;
+  border-radius: 8px;
+  background: #fff;
+  color: #345848;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.points-mode-option--selected {
+  border-color: #75ad88;
+  background: #eef7f0;
+  color: #1b6d4a;
+  font-weight: 700;
+}
+
+.points-mode-option--disabled {
+  cursor: not-allowed;
+  color: #718078;
+}
+
+.points-mode-option input {
+  flex: 0 0 auto;
+  margin: 2px 0 0;
+  accent-color: #1d714e;
+}
+
+.points-mode-label,
+.points-mode-description {
+  display: block;
+}
+
+.points-mode-description {
+  margin-top: 2px;
+  color: #61736a;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.points-mode-help {
+  margin: 1px 1px 0;
+  color: #61736a;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
 .point-count {
   display: grid;
   min-width: 30px;
@@ -263,6 +330,13 @@ a:focus-visible {
   color: #61736a;
   font-size: 12px;
   line-height: 1.5;
+}
+
+.point-card-distance {
+  color: #176f4a;
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 .demo-badge {
