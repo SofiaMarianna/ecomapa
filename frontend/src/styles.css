@@ -338,6 +338,7 @@ a:focus-visible {
 }
 
 .map-panel {
+  position: relative;
   min-width: 0;
   min-height: 420px;
   overflow: hidden;
@@ -351,6 +352,36 @@ a:focus-visible {
   width: 100%;
   height: calc(100vh - 110px);
   min-height: 420px;
+}
+
+.map-location-status {
+  position: absolute;
+  z-index: 1100;
+  top: 12px;
+  left: 12px;
+  max-width: calc(100% - 24px);
+  padding: 9px 12px;
+  border: 1px solid #cbd9ce;
+  border-radius: 8px;
+  background: rgb(255 255 255 / 96%);
+  box-shadow: 0 2px 8px rgb(23 56 39 / 14%);
+  color: #345848;
+  font-size: 12px;
+  line-height: 1.45;
+  pointer-events: none;
+}
+
+.map-location-status--error {
+  border-color: #efc8c3;
+  color: #8b332c;
+}
+
+.user-location-tooltip {
+  border: 1px solid #b8d5ea;
+  border-radius: 6px;
+  background: #f4faff;
+  color: #174e78;
+  font-weight: 700;
 }
 
 .details-panel {

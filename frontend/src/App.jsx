@@ -4,6 +4,7 @@ import EcoPointForm from './components/EcoPointForm.jsx';
 import EcoPointDetails from './components/EcoPointDetails.jsx';
 import Header from './components/Header.jsx';
 import PointsSidebar from './components/PointsSidebar.jsx';
+import useBrowserLocation from './hooks/useBrowserLocation.js';
 import useEcoPointDetails from './hooks/useEcoPointDetails.js';
 import useEcoPoints from './hooks/useEcoPoints.js';
 import EcoMap from './map/EcoMap.jsx';
@@ -21,6 +22,9 @@ export default function App() {
   const boundsKeyRef = useRef(null);
   const pendingFocusRefreshRef = useRef(false);
   const isDeletingRef = useRef(false);
+  const hasUserInteractedRef = useRef(false);
+  const { location, status: locationStatus, errorMessage: locationErrorMessage } =
+    useBrowserLocation();
   const { points, isLoading, error, retry } = useEcoPoints(bounds);
   const retryPointsRef = useRef(retry);
   retryPointsRef.current = retry;
@@ -46,7 +50,12 @@ export default function App() {
   }, []);
 
   const handleSelectPoint = useCallback((point) => {
+    hasUserInteractedRef.current = true;
     setSelectedPoint(point);
+  }, []);
+
+  const handleMapInteraction = useCallback(() => {
+    hasUserInteractedRef.current = true;
   }, []);
 
   const handleOpenForm = useCallback((mode) => {
@@ -55,6 +64,7 @@ export default function App() {
   }, []);
 
   const handleEditPoint = useCallback((point) => {
+    hasUserInteractedRef.current = true;
     setSuccessMessage('');
     setSelectedPoint(point);
     setFormMode('edit');
@@ -107,6 +117,7 @@ export default function App() {
   }, [pointToDelete]);
 
   const handlePointSaved = useCallback((savedPoint, mode) => {
+    hasUserInteractedRef.current = true;
     pendingFocusRefreshRef.current = true;
     setSelectedPoint(savedPoint);
     setFocusPoint(savedPoint);
@@ -150,6 +161,11 @@ export default function App() {
               onBoundsChange={handleBoundsChange}
               onSelect={handleSelectPoint}
               focusPoint={focusPoint}
+              location={location}
+              locationStatus={locationStatus}
+              locationErrorMessage={locationErrorMessage}
+              hasUserInteractedRef={hasUserInteractedRef}
+              onUserInteraction={handleMapInteraction}
             />
           </section>
           <EcoPointDetails
