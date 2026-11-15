@@ -39,7 +39,6 @@ export default function CreateEcoPointForm({ onCancel, onCreated }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const dialogRef = useRef(null);
   const locationRef = useRef(location);
-  const addressSourceRef = useRef(null);
   const searchControllerRef = useRef(null);
   const reverseControllerRef = useRef(null);
   const isSubmittingRef = useRef(isSubmitting);
@@ -215,7 +214,6 @@ export default function CreateEcoPointForm({ onCancel, onCreated }) {
 
     updateLocation({ latitude, longitude });
     setAddress(result.display_name || '');
-    addressSourceRef.current = 'search';
     setAddressNeedsReview(false);
     setAddressReviewConfirmed(false);
     setMapCenter([latitude, longitude]);
@@ -252,7 +250,6 @@ export default function CreateEcoPointForm({ onCancel, onCreated }) {
 
       if (typeof result?.display_name === 'string' && result.display_name.trim()) {
         setAddress(result.display_name);
-        addressSourceRef.current = 'reverse';
         setAddressNeedsReview(false);
         setAddressReviewConfirmed(false);
         setFieldErrors((current) => ({ ...current, address: undefined }));
@@ -437,7 +434,6 @@ export default function CreateEcoPointForm({ onCancel, onCreated }) {
                   setReverseLoading(false);
                   setReverseError(null);
                   setAddress(event.target.value);
-                  addressSourceRef.current = 'manual';
                   setAddressNeedsReview(false);
                   setAddressReviewConfirmed(false);
                   setFieldErrors((current) => ({ ...current, address: undefined }));
