@@ -36,6 +36,10 @@ async function requestData(path, {
     );
   }
 
+  if (response.status === 204 && method === 'DELETE') {
+    return undefined;
+  }
+
   let payload;
 
   try {
@@ -116,6 +120,13 @@ export function updateEcoPoint(id, data, { signal } = {}) {
   return requestData(`/eco-points/${encodeURIComponent(id)}`, {
     method: 'PUT',
     body: data,
+    signal,
+  });
+}
+
+export function deleteEcoPoint(id, { signal } = {}) {
+  return requestData(`/eco-points/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
     signal,
   });
 }

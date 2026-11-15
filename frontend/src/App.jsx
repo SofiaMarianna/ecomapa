@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import DeleteEcoPointDialog from './components/DeleteEcoPointDialog.jsx';
 import EcoPointForm from './components/EcoPointForm.jsx';
 import EcoPointDetails from './components/EcoPointDetails.jsx';
 import Header from './components/Header.jsx';
@@ -6,6 +7,7 @@ import PointsSidebar from './components/PointsSidebar.jsx';
 import useEcoPointDetails from './hooks/useEcoPointDetails.js';
 import useEcoPoints from './hooks/useEcoPoints.js';
 import EcoMap from './map/EcoMap.jsx';
+import { deleteEcoPoint } from './services/api.js';
 
 export default function App() {
   const [bounds, setBounds] = useState(null);
@@ -13,8 +15,12 @@ export default function App() {
   const [formMode, setFormMode] = useState(null);
   const [focusPoint, setFocusPoint] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
+  const [pointToDelete, setPointToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
   const boundsKeyRef = useRef(null);
   const pendingFocusRefreshRef = useRef(false);
+  const isDeletingRef = useRef(false);
   const { points, isLoading, error, retry } = useEcoPoints(bounds);
   const retryPointsRef = useRef(retry);
   retryPointsRef.current = retry;
@@ -53,6 +59,52 @@ export default function App() {
     setSelectedPoint(point);
     setFormMode('edit');
   }, []);
+
+  const handleRequestDelete = useCallback((point) => {
+    setSuccessMessage('');
+    setDeleteError(null);
+    setPointToDelete(point);
+  }, []);
+
+  const handleCancelDelete = useCallback(() => {
+    if (isDeletingRef.current) {
+      return;
+    }
+
+    setPointToDelete(null);
+    setDeleteError(null);
+  }, []);
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!pointToDelete || isDeletingRef.current) {
+      return;
+    }
+
+    isDeletingRef.current = true;
+    setIsDeleting(true);
+    setDeleteError(null);
+
+    try {
+      await deleteEcoPoint(pointToDelete.id);
+      const deletedPointId = pointToDelete.id;
+
+      setPointToDelete(null);
+      setSelectedPoint((current) => (
+        current?.id === deletedPointId ? null : current
+      ));
+      setFocusPoint((current) => (
+        current?.id === deletedPointId ? null : current
+      ));
+      pendingFocusRefreshRef.current = false;
+      retryPointsRef.current();
+      setSuccessMessage('Ponto excluído com sucesso.');
+    } catch (requestError) {
+      setDeleteError(requestError.message);
+    } finally {
+      isDeletingRef.current = false;
+      setIsDeleting(false);
+    }
+  }, [pointToDelete]);
 
   const handlePointSaved = useCallback((savedPoint, mode) => {
     pendingFocusRefreshRef.current = true;
@@ -107,6 +159,7 @@ export default function App() {
             error={detailsError}
             onRetry={retryDetails}
             onEdit={handleEditPoint}
+            onDelete={handleRequestDelete}
           />
         </main>
       </div>
@@ -117,6 +170,15 @@ export default function App() {
           initialPoint={formMode === 'edit' ? details : null}
           onCancel={() => setFormMode(null)}
           onSaved={handlePointSaved}
+        />
+      )}
+      {pointToDelete && (
+        <DeleteEcoPointDialog
+          point={pointToDelete}
+          isDeleting={isDeleting}
+          error={deleteError}
+          onCancel={handleCancelDelete}
+          onConfirm={handleConfirmDelete}
         />
       )}
     </div>
