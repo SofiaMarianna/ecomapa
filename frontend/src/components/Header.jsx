@@ -1,4 +1,4 @@
-export default function Header() {
+export default function Header({ onOpenCreate }) {
   return (
     <header className="app-header">
       <a className="brand" href="/" aria-label="EcoMapa, início">
@@ -11,6 +11,9 @@ export default function Header() {
         </span>
       </a>
       <p className="header-note">Pontos de coleta seletiva perto de você</p>
+      <button className="primary-button header-create-button" type="button" onClick={onOpenCreate}>
+        Cadastrar ponto
+      </button>
     </header>
   );
 }
