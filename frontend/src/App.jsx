@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import CreateEcoPointForm from './components/CreateEcoPointForm.jsx';
+import EcoPointForm from './components/EcoPointForm.jsx';
 import EcoPointDetails from './components/EcoPointDetails.jsx';
 import Header from './components/Header.jsx';
 import PointsSidebar from './components/PointsSidebar.jsx';
@@ -10,9 +10,9 @@ import EcoMap from './map/EcoMap.jsx';
 export default function App() {
   const [bounds, setBounds] = useState(null);
   const [selectedPoint, setSelectedPoint] = useState(null);
-  const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
+  const [formMode, setFormMode] = useState(null);
   const [focusPoint, setFocusPoint] = useState(null);
-  const [creationStatus, setCreationStatus] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const boundsKeyRef = useRef(null);
   const pendingFocusRefreshRef = useRef(false);
   const { points, isLoading, error, retry } = useEcoPoints(bounds);
@@ -43,37 +43,43 @@ export default function App() {
     setSelectedPoint(point);
   }, []);
 
-  const handleOpenCreateForm = useCallback(() => {
-    setCreationStatus('');
-    setIsCreateFormOpen(true);
+  const handleOpenForm = useCallback((mode) => {
+    setSuccessMessage('');
+    setFormMode(mode);
   }, []);
 
-  const handleCloseCreateForm = useCallback(() => {
-    setIsCreateFormOpen(false);
+  const handleEditPoint = useCallback((point) => {
+    setSuccessMessage('');
+    setSelectedPoint(point);
+    setFormMode('edit');
   }, []);
 
-  const handlePointCreated = useCallback((createdPoint) => {
+  const handlePointSaved = useCallback((savedPoint, mode) => {
     pendingFocusRefreshRef.current = true;
-    setSelectedPoint(createdPoint);
-    setFocusPoint(createdPoint);
-    setIsCreateFormOpen(false);
-    setCreationStatus('Ponto cadastrado com sucesso.');
+    setSelectedPoint(savedPoint);
+    setFocusPoint(savedPoint);
+    setFormMode(null);
+    setSuccessMessage(
+      mode === 'edit'
+        ? 'Ponto atualizado com sucesso.'
+        : 'Ponto cadastrado com sucesso.',
+    );
   }, []);
 
   useEffect(() => {
-    if (!creationStatus) {
+    if (!successMessage) {
       return undefined;
     }
 
-    const timeoutId = window.setTimeout(() => setCreationStatus(''), 6000);
+    const timeoutId = window.setTimeout(() => setSuccessMessage(''), 6000);
     return () => window.clearTimeout(timeoutId);
-  }, [creationStatus]);
+  }, [successMessage]);
 
   return (
     <div className="app-shell">
-      <Header onOpenCreate={handleOpenCreateForm} />
-      {creationStatus && (
-        <p className="app-success-message" role="status">{creationStatus}</p>
+      <Header onOpenCreate={() => handleOpenForm('create')} />
+      {successMessage && (
+        <p className="app-success-message" role="status">{successMessage}</p>
       )}
       <div className="workspace">
         <PointsSidebar
@@ -100,13 +106,17 @@ export default function App() {
             isLoading={isDetailsLoading}
             error={detailsError}
             onRetry={retryDetails}
+            onEdit={handleEditPoint}
           />
         </main>
       </div>
-      {isCreateFormOpen && (
-        <CreateEcoPointForm
-          onCancel={handleCloseCreateForm}
-          onCreated={handlePointCreated}
+      {formMode && (
+        <EcoPointForm
+          key={`${formMode}-${formMode === 'edit' ? details?.id : 'new'}`}
+          mode={formMode}
+          initialPoint={formMode === 'edit' ? details : null}
+          onCancel={() => setFormMode(null)}
+          onSaved={handlePointSaved}
         />
       )}
     </div>

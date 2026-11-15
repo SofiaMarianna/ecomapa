@@ -8,6 +8,7 @@ export default function EcoPointDetails({
   isLoading,
   error,
   onRetry,
+  onEdit,
 }) {
   return (
     <section
@@ -49,6 +50,15 @@ export default function EcoPointDetails({
             <h3>{point.name}</h3>
             {point.is_demo && <DemoBadge />}
           </div>
+          {Array.isArray(point.materials) && onEdit && (
+            <button
+              className="secondary-button details-edit-button"
+              type="button"
+              onClick={() => onEdit(point)}
+            >
+              Editar ponto
+            </button>
+          )}
           {point.address && (
             <p className="details-address">{point.address}</p>
           )}
