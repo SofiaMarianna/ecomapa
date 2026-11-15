@@ -4,6 +4,7 @@ import {
   getMaterials,
   reverseGeocode,
   searchGeocode,
+  updateEcoPoint,
 } from '../services/api.js';
 import LocationPickerMap from '../map/LocationPickerMap.jsx';
 
@@ -14,12 +15,20 @@ function locationsMatch(first, second) {
     && first?.longitude === second?.longitude;
 }
 
-export default function CreateEcoPointForm({ onCancel, onCreated }) {
-  const [name, setName] = useState('');
-  const [address, setAddress] = useState('');
-  const [description, setDescription] = useState('');
+export default function EcoPointForm({
+  mode = 'create',
+  initialPoint = null,
+  onCancel,
+  onSaved,
+}) {
+  const isEditing = mode === 'edit';
+  const [name, setName] = useState(() => initialPoint?.name ?? '');
+  const [address, setAddress] = useState(() => initialPoint?.address ?? '');
+  const [description, setDescription] = useState(() => initialPoint?.description ?? '');
   const [materials, setMaterials] = useState([]);
-  const [selectedMaterialIds, setSelectedMaterialIds] = useState(() => new Set());
+  const [selectedMaterialIds, setSelectedMaterialIds] = useState(
+    () => new Set((initialPoint?.materials ?? []).map((material) => material.id)),
+  );
   const [materialsLoading, setMaterialsLoading] = useState(true);
   const [materialsError, setMaterialsError] = useState(null);
   const [materialsRetry, setMaterialsRetry] = useState(0);
@@ -32,8 +41,16 @@ export default function CreateEcoPointForm({ onCancel, onCreated }) {
   const [reverseError, setReverseError] = useState(null);
   const [addressNeedsReview, setAddressNeedsReview] = useState(false);
   const [addressReviewConfirmed, setAddressReviewConfirmed] = useState(false);
-  const [location, setLocation] = useState(null);
-  const [mapCenter, setMapCenter] = useState(INITIAL_MAP_CENTER);
+  const [location, setLocation] = useState(() => (
+    initialPoint
+      ? { latitude: initialPoint.latitude, longitude: initialPoint.longitude }
+      : null
+  ));
+  const [mapCenter, setMapCenter] = useState(() => (
+    initialPoint
+      ? [initialPoint.latitude, initialPoint.longitude]
+      : INITIAL_MAP_CENTER
+  ));
   const [fieldErrors, setFieldErrors] = useState({});
   const [submitError, setSubmitError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -340,15 +357,18 @@ export default function CreateEcoPointForm({ onCancel, onCreated }) {
     isSubmittingRef.current = true;
     setIsSubmitting(true);
     try {
-      const createdPoint = await createEcoPoint({
+      const pointData = {
         name: normalizedName,
         address: normalizedAddress,
         description: description.trim() || null,
         latitude: location.latitude,
         longitude: location.longitude,
         material_ids: Array.from(selectedMaterialIds),
-      });
-      onCreated(createdPoint);
+      };
+      const savedPoint = isEditing
+        ? await updateEcoPoint(initialPoint.id, pointData)
+        : await createEcoPoint(pointData);
+      onSaved(savedPoint, mode);
     } catch (error) {
       setSubmitError(error.message);
     } finally {
@@ -382,13 +402,17 @@ export default function CreateEcoPointForm({ onCancel, onCreated }) {
       >
         <div className="create-modal-heading">
           <div>
-            <p className="eyebrow">Novo local de coleta</p>
-            <h2 id="create-point-title">Cadastrar ponto</h2>
+            <p className="eyebrow">
+              {isEditing ? 'Editar local de coleta' : 'Novo local de coleta'}
+            </p>
+            <h2 id="create-point-title">
+              {isEditing ? 'Editar ponto' : 'Cadastrar ponto'}
+            </h2>
           </div>
           <button
             className="icon-button"
             type="button"
-            aria-label="Fechar cadastro"
+            aria-label={isEditing ? 'Fechar edição' : 'Fechar cadastro'}
             onClick={onCancel}
             disabled={isSubmitting}
           >
@@ -626,7 +650,9 @@ export default function CreateEcoPointForm({ onCancel, onCreated }) {
 
           {submitError && (
             <p className="form-submit-error" role="alert">
-              Não foi possível cadastrar o ponto. {submitError}
+              {isEditing
+                ? 'Não foi possível atualizar o ponto.'
+                : 'Não foi possível cadastrar o ponto.'} {submitError}
             </p>
           )}
 
@@ -640,7 +666,9 @@ export default function CreateEcoPointForm({ onCancel, onCreated }) {
               Cancelar
             </button>
             <button className="primary-button" type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Cadastrando…' : 'Salvar ponto'}
+              {isSubmitting
+                ? (isEditing ? 'Atualizando…' : 'Cadastrando…')
+                : (isEditing ? 'Atualizar ponto' : 'Salvar ponto')}
             </button>
           </div>
         </form>

@@ -389,6 +389,10 @@ a:focus-visible {
   line-height: 1.35;
 }
 
+.details-edit-button {
+  margin-top: 12px;
+}
+
 .details-address {
   margin: 7px 0 0;
   font-size: 13px;

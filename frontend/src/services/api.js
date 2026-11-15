@@ -111,3 +111,11 @@ export function createEcoPoint(data, { signal } = {}) {
     signal,
   });
 }
+
+export function updateEcoPoint(id, data, { signal } = {}) {
+  return requestData(`/eco-points/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    body: data,
+    signal,
+  });
+}

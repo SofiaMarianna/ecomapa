@@ -24,7 +24,13 @@ function FocusPointController({ point, onBoundsChange }) {
       east: bounds.getEast(),
       north: bounds.getNorth(),
     });
-  }, [map, onBoundsChange, point?.id, point?.latitude, point?.longitude]);
+  }, [
+  map,
+  onBoundsChange,
+  point?.id,
+  point?.latitude,
+  point?.longitude,
+]);
 
   return null;
 }
