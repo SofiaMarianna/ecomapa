@@ -85,6 +85,15 @@ export function getEcoPointsByBounds(bounds, { signal } = {}) {
   return requestData(`/eco-points?${params.toString()}`, { signal });
 }
 
+export function getNearbyEcoPoints(lat, lng, { signal } = {}) {
+  const params = new URLSearchParams({
+    lat: String(lat),
+    lng: String(lng),
+  });
+
+  return requestData(`/eco-points/nearby?${params.toString()}`, { signal });
+}
+
 export function getEcoPointById(id, { signal } = {}) {
   return requestData(`/eco-points/${encodeURIComponent(id)}`, { signal });
 }

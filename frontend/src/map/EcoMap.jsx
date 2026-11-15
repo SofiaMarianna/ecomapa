@@ -11,11 +11,11 @@ import MapBoundsReporter from './MapBoundsReporter.jsx';
 
 const INITIAL_CENTER = [-6.8891, -38.5612];
 
-function FocusPointController({ point, onBoundsChange }) {
+function FocusPointController({ point, onBoundsChange, enabled }) {
   const map = useMap();
 
   useEffect(() => {
-    if (!point) {
+    if (!enabled || !point) {
       return;
     }
 
@@ -30,17 +30,86 @@ function FocusPointController({ point, onBoundsChange }) {
       east: bounds.getEast(),
       north: bounds.getNorth(),
     });
-  }, [map, onBoundsChange, point]);
+  }, [enabled, map, onBoundsChange, point]);
+}
+
+function NearbyResultsController({
+  enabled,
+  location,
+  points,
+  isLoading,
+  interactionVersionRef,
+}) {
+  const map = useMap();
+  const wasEnabledRef = useRef(false);
+  const wasLoadingRef = useRef(false);
+  const interactionVersionAtEnableRef = useRef(null);
+
+  useEffect(() => {
+    if (!enabled) {
+      wasEnabledRef.current = false;
+      wasLoadingRef.current = false;
+      interactionVersionAtEnableRef.current = null;
+      return;
+    }
+
+    const justEnabled = !wasEnabledRef.current;
+    if (justEnabled) {
+      wasEnabledRef.current = true;
+      interactionVersionAtEnableRef.current = interactionVersionRef.current;
+      if (location) {
+        map.setView(
+          [location.latitude, location.longitude],
+          Math.max(map.getZoom(), 14),
+        );
+      }
+    }
+
+    if (isLoading) {
+      wasLoadingRef.current = true;
+      return;
+    }
+
+    if (!wasLoadingRef.current || !location) {
+      return;
+    }
+
+    wasLoadingRef.current = false;
+    if (
+      interactionVersionAtEnableRef.current !== interactionVersionRef.current
+    ) {
+      return;
+    }
+
+    const locationPosition = [location.latitude, location.longitude];
+    const pointPositions = points
+      .filter((point) => (
+        Number.isFinite(point.latitude) && Number.isFinite(point.longitude)
+      ))
+      .map((point) => [point.latitude, point.longitude]);
+
+    if (pointPositions.length === 0) {
+      return;
+    }
+
+    map.fitBounds([locationPosition, ...pointPositions], {
+      padding: [36, 36],
+      maxZoom: 15,
+    });
+  }, [enabled, interactionVersionRef, isLoading, location, map, points]);
 
   return null;
 }
 
-function MapInteractionTracker({ onUserInteraction }) {
+function MapInteractionTracker({ onUserInteraction, interactionVersionRef }) {
   const map = useMap();
 
   useEffect(() => {
     const container = map.getContainer();
-    const handleInteraction = () => onUserInteraction();
+    const handleInteraction = () => {
+      interactionVersionRef.current += 1;
+      onUserInteraction();
+    };
 
     container.addEventListener('pointerdown', handleInteraction, true);
     container.addEventListener('touchstart', handleInteraction, true);
@@ -53,7 +122,7 @@ function MapInteractionTracker({ onUserInteraction }) {
       container.removeEventListener('wheel', handleInteraction);
       container.removeEventListener('keydown', handleInteraction);
     };
-  }, [map, onUserInteraction]);
+  }, [interactionVersionRef, map, onUserInteraction]);
 
   return null;
 }
@@ -90,7 +159,11 @@ export default function EcoMap({
   locationErrorMessage,
   hasUserInteractedRef,
   onUserInteraction,
+  isProximityMode,
+  isPointsLoading,
 }) {
+  const interactionVersionRef = useRef(0);
+
   return (
     <>
       <MapContainer
@@ -105,12 +178,26 @@ export default function EcoMap({
           url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <MapBoundsReporter onBoundsChange={onBoundsChange} />
-        <MapInteractionTracker onUserInteraction={onUserInteraction} />
+        <MapInteractionTracker
+          onUserInteraction={onUserInteraction}
+          interactionVersionRef={interactionVersionRef}
+        />
+        <NearbyResultsController
+          enabled={isProximityMode}
+          location={location}
+          points={points}
+          isLoading={isPointsLoading}
+          interactionVersionRef={interactionVersionRef}
+        />
         <LocationController
           location={location}
           hasUserInteractedRef={hasUserInteractedRef}
         />
-        <FocusPointController point={focusPoint} onBoundsChange={onBoundsChange} />
+        <FocusPointController
+          point={focusPoint}
+          onBoundsChange={onBoundsChange}
+          enabled={!isProximityMode}
+        />
         {location && (
           <CircleMarker
             center={[location.latitude, location.longitude]}
