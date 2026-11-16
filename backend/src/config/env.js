@@ -32,6 +32,12 @@ function parseBoolean(name, value) {
   throw new Error(`${name} must be either "true" or "false"`);
 }
 
+const dbSsl = parseBoolean('DB_SSL', process.env.DB_SSL ?? 'false');
+const dbSslCaPath = process.env.DB_SSL_CA_PATH;
+if (dbSsl && (typeof dbSslCaPath !== 'string' || dbSslCaPath.trim() === '')) {
+  throw new Error('DB_SSL_CA_PATH is required when DB_SSL=true');
+}
+
 const nodeEnv = process.env.NODE_ENV ?? 'development';
 if (!['development', 'test', 'production'].includes(nodeEnv)) {
   throw new Error('NODE_ENV must be development, test, or production');
@@ -81,7 +87,8 @@ export const env = Object.freeze({
   DB_NAME: process.env.DB_NAME.trim(),
   DB_USER: process.env.DB_USER.trim(),
   DB_PASSWORD: process.env.DB_PASSWORD,
-  DB_SSL: parseBoolean('DB_SSL', process.env.DB_SSL ?? 'false'),
+  DB_SSL: dbSsl,
+  DB_SSL_CA_PATH: dbSslCaPath,
   CORS_ORIGIN: corsOrigin,
   NOMINATIM_BASE_URL: parseNominatimBaseUrl(
   process.env.NOMINATIM_BASE_URL ?? 'https://nominatim.openstreetmap.org',
