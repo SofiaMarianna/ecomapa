@@ -2,13 +2,13 @@
 
 ## 1. Objetivo e escopo
 
-O EcoMapa é uma aplicação web para localizar pontos de coleta seletiva no município de Cajazeiras, Paraíba.
+O EcoMapa é uma aplicação web implementada e publicada para localizar pontos de coleta seletiva no município de Cajazeiras, Paraíba. A aplicação está disponível em [ecomapa-eight.vercel.app](https://ecomapa-eight.vercel.app/).
 
 A aplicação permite explorar pontos de coleta em um mapa interativo, consultar detalhes e materiais aceitos e realizar operações de cadastro, consulta, edição e exclusão.
 
 O sistema também oferece recursos de localização geográfica, incluindo pesquisa de endereços, geolocalização do navegador e consultas espaciais por proximidade e pelos limites visíveis do mapa.
 
-### Funcionalidades previstas
+### Funcionalidades implementadas
 
 - Visualizar pontos de coleta em um mapa interativo.
 - Consultar detalhes dos pontos e os materiais aceitos.
@@ -20,7 +20,7 @@ O sistema também oferece recursos de localização geográfica, incluindo pesqu
 - Consultar somente os pontos dentro da área atualmente visível no mapa.
 - Identificar visualmente os registros fictícios utilizados para demonstração.
 
-A primeira versão não implementará autenticação de usuários, avaliações, comentários ou gerenciamento de horários de funcionamento.
+A versão atual não inclui autenticação de usuários, avaliações, comentários ou gerenciamento de horários de funcionamento. A ausência de autenticação é uma decisão intencional para a demonstração acadêmica e está detalhada na [seção 9](#9-segurança).
 
 ---
 
@@ -43,19 +43,19 @@ A primeira versão não implementará autenticação de usuários, avaliações,
 
 ### Decisões técnicas
 
-O frontend será desenvolvido separadamente do backend.
+O frontend é desenvolvido separadamente do backend.
 
-O backend utilizará Node.js com Express para disponibilizar uma API HTTP. As operações de persistência serão realizadas com o pacote `pg`, utilizando consultas SQL parametrizadas diretamente, sem a utilização de ORM.
+O backend utiliza Node.js com Express para disponibilizar uma API HTTP. As operações de persistência são realizadas com o pacote `pg`, utilizando consultas SQL parametrizadas diretamente, sem ORM.
 
-O PostgreSQL utilizará a extensão PostGIS para armazenar e consultar informações geográficas.
+O PostgreSQL utiliza a extensão PostGIS para armazenar e consultar informações geográficas.
 
-As localizações dos pontos serão armazenadas utilizando o tipo `GEOGRAPHY(Point, 4326)`, permitindo cálculos de distância em metros e consultas espaciais.
+As localizações dos pontos são armazenadas utilizando o tipo `GEOGRAPHY(Point, 4326)`, que permite cálculos de distância em metros e consultas espaciais.
 
 ---
 
 ## 3. Visão da arquitetura e comunicação
 
-A aplicação será organizada em três componentes principais: frontend, backend e banco de dados.
+A aplicação está organizada em três componentes principais: frontend, backend e banco de dados.
 
 ```mermaid
 flowchart TB
@@ -92,11 +92,11 @@ O backend é responsável por validar as requisições, executar as regras de ne
 
 O Leaflet é utilizado no frontend para apresentar o mapa e permitir a interação com as localizações.
 
-Os dados cartográficos serão obtidos por um serviço baseado em OpenStreetMap.
+Os dados cartográficos são obtidos por um serviço baseado em OpenStreetMap.
 
-A busca de endereços será realizada pelo backend, que se comunicará com o Nominatim.
+A busca de endereços é realizada pelo backend, que se comunica com o Nominatim.
 
-A geolocalização será fornecida pelo navegador somente mediante permissão da pessoa usuária. Caso a permissão seja negada ou a localização não esteja disponível, o mapa utilizará Cajazeiras como localização inicial de referência.
+A geolocalização é fornecida pelo navegador somente mediante permissão da pessoa usuária. Caso a permissão seja negada ou a localização não esteja disponível, o mapa utiliza Cajazeiras como localização inicial de referência.
 
 ---
 
@@ -104,7 +104,7 @@ A geolocalização será fornecida pelo navegador somente mediante permissão da
 
 ### 4.1. Frontend
 
-O frontend será responsável por:
+O frontend é responsável por:
 
 - Implementar a interface web utilizando React e Vite.
 - Apresentar o mapa interativo utilizando Leaflet.
@@ -119,11 +119,11 @@ O frontend será responsável por:
 - Identificar visualmente os registros fictícios por meio da informação `is_demo`.
 - Consumir a API do backend, sem estabelecer conexão direta com o banco de dados.
 
-O frontend será responsável pela apresentação e interação com a aplicação, enquanto as regras de negócio e a persistência permanecerão no backend.
+O frontend é responsável pela apresentação e interação com a aplicação, enquanto as regras de negócio e a persistência permanecem no backend.
 
 ### 4.2. Backend
 
-O backend será responsável por:
+O backend é responsável por:
 
 - Expor a API HTTP utilizando Node.js e Express.
 - Receber e validar as requisições do frontend.
@@ -140,25 +140,25 @@ O backend será responsável por:
 - Centralizar o acesso ao PostgreSQL utilizando o pacote `pg`.
 - Utilizar SQL parametrizado para evitar a construção insegura de consultas com valores recebidos diretamente das requisições.
 
-A organização interna utilizará uma arquitetura em camadas, separando rotas, controllers, services, repositories, validações e configurações.
+A organização interna segue uma arquitetura em camadas, separando rotas, controllers, services, repositories, validações e configurações.
 
-O acesso ao banco será realizado por meio dos repositories, que concentrarão as consultas SQL.
+O acesso ao banco é realizado por meio dos repositories, que concentram as consultas SQL.
 
 ### 4.3. Banco de dados
 
-O banco de dados utilizará PostgreSQL com a extensão PostGIS.
+O banco de dados utiliza PostgreSQL com a extensão PostGIS.
 
-A primeira versão terá três tabelas próprias da aplicação:
+A versão atual tem três tabelas próprias da aplicação:
 
 - `eco_point`
 - `material`
 - `eco_point_material`
 
-As localizações serão armazenadas utilizando `GEOGRAPHY(Point, 4326)`.
+As localizações são armazenadas utilizando `GEOGRAPHY(Point, 4326)`.
 
-Um índice espacial GiST será utilizado para apoiar as consultas geográficas.
+Um índice espacial GiST é utilizado para apoiar as consultas geográficas.
 
-O banco também utilizará um índice em `material_id` na tabela associativa para apoiar consultas por material.
+O banco também utiliza um índice em `material_id` na tabela associativa para apoiar consultas por material.
 
 A modelagem completa está documentada em [data-model.md](data-model.md).
 
@@ -176,7 +176,7 @@ A modelagem completa está documentada em [data-model.md](data-model.md).
 6. O banco retorna somente os pontos que pertencem à área consultada.
 7. O frontend apresenta os resultados como marcadores no mapa.
 
-A consulta será realizada novamente quando a área visível do mapa mudar, evitando carregar todos os pontos cadastrados a cada acesso.
+A consulta é realizada novamente quando a área visível do mapa muda, evitando carregar todos os pontos cadastrados a cada acesso.
 
 ### 5.2. Busca por proximidade
 
@@ -209,9 +209,9 @@ Caso a geolocalização não esteja disponível ou seja negada, a pessoa poderá
 8. O ponto e seus relacionamentos com os materiais são persistidos.
 9. A transação é confirmada quando todas as operações são concluídas.
 
-Caso alguma operação falhe, a transação será revertida para evitar registros parcialmente persistidos.
+Caso alguma operação falhe, a transação é revertida para evitar registros parcialmente persistidos.
 
-Na edição, os dados do ponto e seus materiais associados também serão atualizados dentro de uma operação transacional.
+Na edição, os dados do ponto e seus materiais associados também são atualizados dentro de uma operação transacional.
 
 ### 5.5. Exclusão
 
@@ -241,9 +241,9 @@ O endereço retornado representa uma referência obtida a partir dos dados carto
 
 ---
 
-## 6. Endpoints implementados e previstos
+## 6. Endpoints implementados
 
-Os caminhos abaixo incluem endpoints implementados e contratos planejados para a API. Os endpoints de geocodificação descritos nesta seção estão implementados.
+Os caminhos e contratos abaixo correspondem aos endpoints implementados na API.
 
 ### 6.1. Pontos de coleta
 
@@ -292,7 +292,7 @@ Em caso de sucesso, o endpoint retorna HTTP 200:
 
 Se nenhum ponto estiver dentro dos limites, retorna HTTP 200 com `{"data":[]}`. Falhas de acesso ao PostgreSQL retornam HTTP 503. Os erros seguem o formato centralizado `{ "error": { "message": "..." } }`.
 
-A busca por proximidade utilizará:
+A busca por proximidade utiliza:
 
 | Parâmetro | Significado |
 |---|---|
@@ -519,7 +519,7 @@ A exclusão usa a restrição `ON DELETE CASCADE` da chave estrangeira em `publi
 |---|---|---|
 | `GET` | `/api/materials` | Consultar os materiais disponíveis para seleção e filtros |
 
-O catálogo será inicialmente fixo, portanto não serão implementados endpoints de cadastro, edição e exclusão de materiais na primeira versão.
+O catálogo de materiais é fixo. A API não oferece endpoints para cadastrar, editar ou excluir materiais.
 
 O endpoint `GET /api/materials` não exige parâmetros obrigatórios. Em caso de sucesso, retorna HTTP 200 com os materiais em ordem alfabética:
 
@@ -612,7 +612,7 @@ Política oficial: [Nominatim Usage Policy](https://operations.osmfoundation.org
 
 ### 7.2. OpenStreetMap
 
-Os dados cartográficos utilizados pelo Leaflet poderão ser obtidos por meio do serviço público de tiles do OpenStreetMap.
+Os dados cartográficos utilizados pelo Leaflet são obtidos por meio do serviço público de tiles do OpenStreetMap.
 
 O mapa deverá apresentar de maneira visível a atribuição:
 
@@ -634,9 +634,9 @@ Política oficial: [OpenStreetMap Tile Usage Policy](https://operations.osmfound
 
 ### 7.3. PostGIS no Supabase
 
-O PostGIS será habilitado no banco PostgreSQL hospedado no Supabase.
+O PostGIS está habilitado no banco PostgreSQL hospedado no Supabase.
 
-A extensão deverá ser instalada no schema `extensions`, seguindo a recomendação da documentação do Supabase.
+A extensão está instalada no schema `extensions`, seguindo a recomendação da documentação do Supabase.
 
 As tabelas próprias da aplicação permanecerão no schema `public`.
 
@@ -646,7 +646,7 @@ Documentação: [Supabase - PostGIS](https://supabase.com/docs/guides/database/e
 
 ## 8. Desenvolvimento e hospedagem
 
-O desenvolvimento será realizado localmente utilizando:
+O desenvolvimento local utiliza:
 
 - Visual Studio Code.
 - Node.js.
@@ -654,34 +654,43 @@ O desenvolvimento será realizado localmente utilizando:
 - PostgreSQL com PostGIS.
 - Git.
 
-O Docker será utilizado para disponibilizar uma instância local do banco de dados, facilitando o desenvolvimento e os testes sem depender continuamente do banco hospedado.
+O Docker disponibiliza uma instância local do banco de dados, facilitando o desenvolvimento e os testes sem depender continuamente do banco hospedado.
 
-Na publicação, a arquitetura utilizará:
+Em produção, a arquitetura utiliza:
 
-| Componente | Serviço |
-|---|---|
-| Frontend | Vercel |
-| Backend | Render |
-| Banco de dados | Supabase |
+| Componente | Serviço | Endereço |
+|---|---|---|
+| Frontend | Vercel | https://ecomapa-eight.vercel.app/ |
+| Backend | Render | https://ecomapa-api.onrender.com |
+| Health check | Render | https://ecomapa-api.onrender.com/api/health |
+| Banco de dados | Supabase | PostgreSQL com PostGIS |
 
-As configurações específicas de cada ambiente serão realizadas por variáveis de ambiente.
+O frontend e o backend utilizam as seguintes variáveis de ambiente em produção:
 
-As credenciais do banco de dados e demais segredos permanecerão exclusivamente no backend e não serão versionados no GitHub.
+```text
+VITE_API_BASE_URL=https://ecomapa-api.onrender.com/api
+CORS_ORIGIN=https://ecomapa-eight.vercel.app
+```
+
+As configurações específicas de cada ambiente são realizadas por variáveis de ambiente.
+
+As credenciais do banco de dados e demais segredos permanecem em variáveis de ambiente do backend e não são versionados no GitHub.
 
 ---
 
 ## 9. Segurança
 
-A primeira versão não implementará autenticação de usuários.
+O EcoMapa está publicado como demonstração acadêmica para avaliação, mas não se destina ao uso operacional ou à disponibilização como serviço público de uso geral. A versão atual não implementa login, autenticação nem identificação de usuários. Os endpoints `POST`, `PUT` e `DELETE` podem ser acessados sem autenticação; portanto, a API está publicamente acessível e não deve ser considerada protegida contra operações não autorizadas.
 
-Entretanto, as operações de escrita da API (cadastro, edição e exclusão) não deverão ser publicadas sem uma proteção adequada.
+A aplicação configura CORS para a origem do frontend. CORS controla quais origens de páginas web podem acessar respostas pelo navegador; não é autenticação nem autorização e não impede chamadas diretas à API realizadas por clientes externos.
 
-A estratégia de proteção deverá ser definida e implementada antes da disponibilização pública da API.
+Utilize somente dados fictícios ou não sensíveis na demonstração. Não insira dados pessoais, informações privadas ou credenciais.
 
-Também serão adotadas as seguintes medidas:
+As medidas efetivamente implementadas incluem:
 
+- Middleware Helmet e desativação do cabeçalho `X-Powered-By`.
+- Validação dos dados recebidos, incluindo coordenadas geográficas.
 - Consultas SQL parametrizadas.
-- Validação dos dados recebidos.
-- Validação de coordenadas geográficas.
-- Utilização de variáveis de ambiente para credenciais.
-- Configuração
+- Limite de 100 KB para o corpo JSON das requisições.
+- Credenciais do banco mantidas em variáveis de ambiente do backend.
+- Conexão SSL com o Supabase com validação do certificado CA (`rejectUnauthorized: true`). O certificado é fornecido como Secret File no Render e não deve ser versionado.
