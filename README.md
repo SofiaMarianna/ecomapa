@@ -126,6 +126,19 @@ npm test
 
 A suíte usa `node:test`, fakes para as operações de banco e uma implementação simulada de `fetch`; não exige uma conexão real com PostgreSQL nem acesso ao serviço de geocodificação.
 
+### Backend em produção no Render com Supabase
+
+Para conectar o backend ao Supabase com SSL, obtenha o certificado raiz CA do projeto Supabase e adicione-o no serviço do Render em **Environment → Secret Files**. Salve o arquivo, por exemplo, como `supabase-root.crt`; o Render o disponibiliza em `/etc/secrets/supabase-root.crt`.
+
+No ambiente do serviço do Render, configure:
+
+```text
+DB_SSL=true
+DB_SSL_CA_PATH=/etc/secrets/supabase-root.crt
+```
+
+`DB_SSL_CA_PATH` deve apontar para o caminho completo do Secret File. Quando SSL está habilitado, o backend exige esse caminho, carrega o arquivo como UTF-8 e valida o certificado do servidor. Um caminho ausente, vazio ou ilegível impede a inicialização. Não desabilite a validação do certificado nem versione o arquivo CA; mantenha-o como Secret File no Render.
+
 ### Frontend
 
 Em outro terminal, a partir da raiz do projeto, crie a configuração do frontend (sem sobrescrever um `.env` já existente):

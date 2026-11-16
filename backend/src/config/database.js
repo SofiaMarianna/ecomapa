@@ -1,7 +1,14 @@
+import { readFileSync } from 'node:fs';
 import pg from 'pg';
 import { env } from './env.js';
 
 const { Pool } = pg;
+const ssl = env.DB_SSL
+  ? {
+    ca: readFileSync(env.DB_SSL_CA_PATH, 'utf8'),
+    rejectUnauthorized: true,
+  }
+  : false;
 
 export const pool = new Pool({
   host: env.DB_HOST,
@@ -9,7 +16,7 @@ export const pool = new Pool({
   database: env.DB_NAME,
   user: env.DB_USER,
   password: env.DB_PASSWORD,
-  ssl: env.DB_SSL,
+  ssl,
   max: 10,
   connectionTimeoutMillis: 5000,
   idleTimeoutMillis: 30000,
