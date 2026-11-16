@@ -2,7 +2,7 @@
 
 Aplicação web para localizar e gerenciar pontos de coleta seletiva no município de Cajazeiras, Paraíba. O mapa permite explorar os pontos, consultar detalhes e materiais aceitos, além de apoiar a localização e o cadastro dos locais.
 
-## Funcionalidades previstas
+## Funcionalidades implementadas
 
 - Visualizar pontos de coleta em um mapa.
 - Consultar detalhes dos pontos e os materiais aceitos.
@@ -12,8 +12,9 @@ Aplicação web para localizar e gerenciar pontos de coleta seletiva no municíp
 - Usar a geolocalização do navegador mediante permissão.
 - Buscar pontos em um raio de 2 km.
 - Consultar, para a visualização do mapa, somente os pontos dentro da área visível.
+- Identificar visualmente os registros fictícios utilizados para demonstração.
 
-## Tecnologias definidas
+## Tecnologias utilizadas
 
 - **Frontend:** React, Vite e JavaScript.
 - **Mapa:** Leaflet, com dados cartográficos do OpenStreetMap.
@@ -35,7 +36,7 @@ ecomapa/
 │   ├── migrations/       # Evolução versionada do esquema
 │   └── seeds/            # Dados iniciais e registros fictícios
 ├── docs/
-│   ├── architecture.md   # Componentes, integrações e API prevista
+│   ├── architecture.md   # Componentes, integrações e API implementada
 │   └── data-model.md     # Modelo aprovado do banco de dados
 ├── .gitignore
 └── README.md
@@ -46,6 +47,25 @@ ecomapa/
 - [Frontend — instalação, configuração e execução](frontend/README.md)
 - [Arquitetura](docs/architecture.md)
 - [Modelo de dados](docs/data-model.md)
+
+## Implantação em produção
+
+O EcoMapa está publicado utilizando os seguintes serviços:
+
+| Componente | Serviço | Endereço |
+|---|---|---|
+| Frontend | Vercel | https://ecomapa-eight.vercel.app/ |
+| Backend | Render | https://ecomapa-api.onrender.com |
+| Health check | Render | https://ecomapa-api.onrender.com/api/health |
+| Banco de dados | Supabase | PostgreSQL com PostGIS |
+
+O frontend utiliza a seguinte variável de ambiente em produção:
+
+```text
+VITE_API_BASE_URL=https://ecomapa-api.onrender.com/api
+```
+
+No backend, `CORS_ORIGIN` está configurada como `https://ecomapa-eight.vercel.app`.
 
 ## Desenvolvimento local
 
@@ -160,6 +180,10 @@ O exemplo configura `VITE_API_BASE_URL=http://localhost:3000/api`. Para gerar o 
 npm run build
 ```
 
-## Observação de segurança
+## Segurança e escopo da demonstração
 
-Não haverá autenticação na primeira versão. A proteção das operações de escrita deve ser definida e implementada antes da publicação da API.
+A primeira versão é uma demonstração acadêmica para avaliação e não implementa login, autenticação ou identificação de usuários. Os endpoints de cadastro (`POST`), edição (`PUT`) e exclusão (`DELETE`) podem ser acessados sem autenticação. Embora a API esteja publicada, ela não deve ser considerada protegida contra operações não autorizadas nem destinada a funcionar como um serviço público de produção.
+
+A configuração de CORS controla quais origens de páginas web podem acessar respostas pelo navegador. CORS não é autenticação nem autorização e não impede chamadas diretas à API realizadas por clientes externos. Utilize somente dados fictícios ou não sensíveis; não insira dados pessoais, informações privadas ou credenciais.
+
+As credenciais do banco permanecem em variáveis de ambiente do backend. A conexão de produção com o Supabase utiliza SSL com validação do certificado CA, mantido como Secret File no Render. O arquivo do certificado não deve ser versionado.
